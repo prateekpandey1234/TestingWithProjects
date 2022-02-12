@@ -1,11 +1,16 @@
 package com.example.projectwithtests.data.local
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.fragment.app.testing.launchFragmentInContainer
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
+import com.example.projectwithtests.LaunchFragmentInHiltContainer
+import com.example.projectwithtests.ui.ShoppingFragment
 import com.google.common.truth.Truth.assertThat
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
 import getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
@@ -14,6 +19,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import javax.inject.Inject
+import javax.inject.Named
+
 /**So what does this annotation really do that it allows us to tell jvm that it's a instrumented test and needs to run on jvm and
  * emulator for testing
  * * If a JUnit class or its parent class is annotated with @RunWith, JUnit framework invokes the specified class as a test
@@ -21,30 +29,44 @@ import org.junit.runner.RunWith
  * * In Junit, test suite allows us to aggregate all test cases from multiple classes in one place and run it together.
 * * The SmallTest annotation refers to the Unit tests we run here
  * * MediumTest -> annotation for IIntegration tests or Medium tests
- * * Largetests -> annotation for End-to-End tests we do for our Whole application*/
-@RunWith(AndroidJUnit4::class)
+ * * Largetests -> annotation for End-to-End tests we do for our Whole application
+ *
+ * * @RunWith(AndroidJUnit4::class)
+ * we don't need above annotation when we run tests on our own custom hiltertestrunner [HiltTestRunner]
+ * */
 @ExperimentalCoroutinesApi
 @SmallTest
+@HiltAndroidTest
 class ShoppingDaoTest {
 //so basically we use the following code to specifically tell junit that we want to run all our test cases inside the Main Thread
 //And not allow any Live Data to run Asynchronous  ... this method allows to run the methods of this class one after another in
 // A single Thread which is here our Main Thread
 
     @get:Rule
+    var hiltRule = HiltAndroidRule(this)
+
+    @get:Rule
     var instantTaskExecutorRule = InstantTaskExecutorRule()
 
-    private lateinit var database: ShoppingItemDatabase
+    //so basically hilt is not sure what database should it use to test our Dao hence we specify with Named annotation
+    @Inject
+    @Named("test_db")
+    lateinit var database: ShoppingItemDatabase
     private lateinit var dao: ShoppingDao
 
     @Before
     fun setup() {
+        //use the below code only when we don't use custom hilt test runner
 //We should prefer using Room.inMemoryDataBaseBuilder because it allows us to store data for our
 //Database inside the RAM not storing as persistent storage or like a real Database
 //it also allows to avoid creating new databases for every test cases we are running
-        database = Room.inMemoryDatabaseBuilder(
-            ApplicationProvider.getApplicationContext(),//Used to get Reference for Context of our Application
-            ShoppingItemDatabase::class.java
-        ).allowMainThreadQueries().build()//we use Main Thread as common Thread to run our Tests because we want to run the test cases one after another
+//        database = Room.inMemoryDatabaseBuilder(
+//            ApplicationProvider.getApplicationContext(),//Used to get Reference for Context of our Application
+//            ShoppingItemDatabase::class.java
+//        ).allowMainThreadQueries().build()//we use Main Thread as common Thread to run our Tests because we want to run the test cases one after another
+
+        //this code will inject the dao dependency here
+        hiltRule.inject()
         dao = database.shoppingDao()
     }
     @After
@@ -86,6 +108,13 @@ class ShoppingDaoTest {
         val totalPriceSum = dao.observeTotalPrice().getOrAwaitValue()
 
         assertThat(totalPriceSum).isEqualTo(2 * 10f + 4 * 5.5f)
+    }
+
+    @Test
+    fun testLaunchFragmentInHiltContainer(){
+        LaunchFragmentInHiltContainer<ShoppingFragment> {
+
+        }
     }
 
 }
