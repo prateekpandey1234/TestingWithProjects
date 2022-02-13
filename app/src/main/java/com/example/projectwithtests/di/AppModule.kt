@@ -2,6 +2,9 @@ package com.example.projectwithtests.di
 
 import android.content.Context
 import androidx.room.Room
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import com.example.projectwithtests.R
 import com.example.projectwithtests.data.local.ShoppingDao
 import com.example.projectwithtests.data.local.ShoppingItemDatabase
 import com.example.projectwithtests.data.remote.PixabayAPI
@@ -50,4 +53,14 @@ object AppModule {
         dao: ShoppingDao,
         api: PixabayAPI
     ) = DefaultRepository(dao, api) as ShoppingRepository
+//Instance created for glide so we don't have to initiate every where
+    @Singleton
+    @Provides
+    fun provideGlideInstance(
+        @ApplicationContext context: Context
+    )= Glide.with(context).setDefaultRequestOptions(
+        RequestOptions()
+            .placeholder(R.drawable.ic_image)//here we predefine the placeholder image when user doesn't select any image
+            .error(R.drawable.error_image)//it's the error image when there is some error loadng the image
+    )
 }
