@@ -8,4 +8,5 @@ object Constants {
 
     const val MAX_LENGTH = 20
     const val MAX_PRICE_DIGIT = 10
+    const val GRID_SPAN_COUNT = 4
 }

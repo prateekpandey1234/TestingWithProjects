@@ -125,4 +125,5 @@ dependencies {
     kaptAndroidTest 'com.google.dagger:hilt-android-compiler:2.38.1'
 
     debugImplementation("androidx.fragment:fragment-testing:1.4.1")
+    androidTestImplementation("androidx.test.espresso:espresso-contrib:3.4.0")
 }
